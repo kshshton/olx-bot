@@ -1,6 +1,8 @@
 import json
 import os
 import time
+import webbrowser
+from tkinter.messagebox import askyesno
 
 from dotenv import load_dotenv
 from playsound import playsound
@@ -12,7 +14,7 @@ load_dotenv()
 
 
 class Bot:
-    flat_links_script = """
+    flat_links_script: str = """
         () => {
           return Array.from(
             document.querySelector('div[data-testid="listing-grid"]').getElementsByTagName('a'))
@@ -21,38 +23,35 @@ class Bot:
         }
     """
 
-    yahoo_sound = "../assets/yahoo.mp3"
-    previous_values_file = "previous_values.json"
-    file_path = os.getenv("OUTPUT_FILE_PATH")
+    yahoo_sound: str = "../assets/yahoo.mp3"
+    previous_values_file: str = "previous_values.json"
+    file_path: str = os.getenv("OUTPUT_FILE_PATH")
 
-    def __init__(self, url):
+    def __init__(self, url: str) -> None:
         self.url = url
         self.previous_flat_links = self.load_previous_values()
 
-    def make_sound(self):
+    def make_sound(self) -> None:
         playsound(self.yahoo_sound)
 
-    def load_previous_values(self):
+    def load_previous_values(self) -> set:
         try:
             with open(f"../{self.previous_values_file}", 'r') as file:
                 return set(json.load(file))
         except (FileNotFoundError, json.JSONDecodeError):
             return set()
 
-    def save_previous_values(self):
+    def save_previous_values(self) -> None:
         with open(f"../{self.previous_values_file}", 'w') as file:
             json.dump(list(self.previous_flat_links), file)
 
-    def update_output_file(self, links):
-        content = str(links)
-        if not os.path.exists(self.file_path):
-            with open(self.file_path, 'w') as file:
-                file.write(content)
+    def open_links(self, current_flat_links: set) -> None:
+        if askyesno(message="Czy chcesz otworzyć nowe linki?"):
+            new_links = current_flat_links - self.previous_flat_links
+            for link in new_links:
+                webbrowser.open(link)
 
-        with open(self.file_path, 'a') as file:
-            file.write(content)
-
-    def run(self, playwright: Playwright):
+    def run(self, playwright: Playwright) -> None:
         chromium = playwright.chromium
         browser = chromium.launch()
         page = browser.new_page()
@@ -62,7 +61,7 @@ class Bot:
         ))
         if current_flat_links != self.previous_flat_links:
             self.make_sound()
-            self.update_output_file(current_flat_links)
+            self.open_links(current_flat_links)
         self.previous_flat_links = current_flat_links
         self.save_previous_values()
         browser.close()
