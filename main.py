@@ -47,13 +47,14 @@ class Bot:
             json.dump(list(self.previous_flat_links), file)
 
     def open_links(self, current_flat_links: set) -> None:
-        self.make_sound()
         new_links = current_flat_links - self.previous_flat_links
-        message = "Czy chcesz otworzyć nowy link?" if len(
-            new_links) == 1 else f"Czy chcesz otworzyć {len(new_links)} nowych linków?"
-        if askyesno(message=message):
-            for link in new_links:
-                webbrowser.open(link)
+        if len(new_links) > 0:
+            self.make_sound()
+            message = "Czy chcesz otworzyć nowy link?" if len(
+                new_links) == 1 else f"Czy chcesz otworzyć {len(new_links)} nowych linków?"
+            if askyesno(message=message):
+                for link in new_links:
+                    webbrowser.open(link)
 
     def run(self, playwright: Playwright) -> None:
         firefox = playwright.firefox
