@@ -18,9 +18,10 @@ class Bot:
     flat_links_script: str = """
         () => {
           return Array.from(
-            document.querySelector('div[data-testid="listing-grid"]').getElementsByTagName('a'))
-              .map(e => "https://www.olx.pl" + e?.getAttribute('href')
+            document.querySelectorAll('div[data-testid="listing-grid"]')
           )
+            .flatMap(list => Array.from(list.getElementsByTagName('a'))
+            .map(e => "https://www.olx.pl" + e.getAttribute('href')));
         }
     """
 
@@ -47,8 +48,10 @@ class Bot:
 
     def open_links(self, current_flat_links: set) -> None:
         self.make_sound()
-        if askyesno(message="Czy chcesz otworzyć nowe linki?"):
-            new_links = current_flat_links - self.previous_flat_links
+        new_links = current_flat_links - self.previous_flat_links
+        message = "Czy chcesz otworzyć nowy link?" if len(
+            new_links) == 1 else f"Czy chcesz otworzyć {len(new_links)} nowych linków?"
+        if askyesno(message=message):
             for link in new_links:
                 webbrowser.open(link)
 
