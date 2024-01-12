@@ -26,7 +26,6 @@ class Bot:
     """
 
     previous_values_file: str = "previous_values.json"
-    file_path: str = os.getenv("OUTPUT_FILE_PATH")
 
     def __init__(self, url: str) -> None:
         self.url = url
