@@ -1,0 +1,3 @@
+- Run `main.py` script
+- Paste destination URL in GUI
+- Script will generates `links.json` file in script's folder as a database
