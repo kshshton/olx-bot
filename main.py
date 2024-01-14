@@ -1,5 +1,4 @@
 import json
-import os
 import time
 import webbrowser
 import winsound
@@ -8,7 +7,8 @@ from tkinter.messagebox import askyesno
 from dotenv import load_dotenv
 from playwright.sync_api import Playwright, sync_playwright
 
-URL: str = "https://www.olx.pl/nieruchomosci/mieszkania/wynajem/nowy-targ/?search%5Bfilter_enum_furniture%5D%5B0%5D=yes&search%5Bfilter_enum_rooms%5D%5B0%5D=four&search%5Bfilter_enum_rooms%5D%5B1%5D=three&search%5Bfilter_float_price%3Afrom%5D=1000&search%5Bfilter_float_price%3Ato%5D=2500"
+from gui import url_input
+
 WAIT_TIME: int = 1800
 
 load_dotenv()
@@ -18,35 +18,45 @@ class Bot:
     flat_links_script: str = """
         () => {
           return Array.from(
-            document.querySelectorAll('div[data-testid="listing-grid"]')
-          )
-            .flatMap(list => Array.from(list.getElementsByTagName('a'))
-            .map(e => "https://www.olx.pl" + e.getAttribute('href')));
+            document.querySelector('div[data-testid="listing-grid"]')
+              .getElementsByTagName('a'))
+              .map(e => "https://www.olx.pl" + e.getAttribute('href')
+          );
         }
     """
 
-    previous_values_file: str = "previous_values.json"
+    links_file_path: str = "links.json"
 
-    def __init__(self, url: str) -> None:
-        self.url = url
-        self.previous_flat_links = self.load_previous_values()
+    def __init__(self) -> None:
+        links_file = self.load_links_file()
+        links = links_file.get("links")
+        self.previous_links = links if links else set()
+        self.url = links_file.get("default_url")
+        self.save = False
+        if not self.url:
+            input = url_input()
+            self.url = input["url"]
+            self.save = input["save"]
 
     def make_sound(self) -> None:
         winsound.PlaySound("SystemExclamation", winsound.SND_ALIAS)
 
-    def load_previous_values(self) -> set:
+    def load_links_file(self) -> dict:
         try:
-            with open(self.previous_values_file, 'r') as file:
-                return set(json.load(file))
+            with open(self.links_file_path, 'r') as file:
+                return json.load(file)
         except (FileNotFoundError, json.JSONDecodeError):
-            return set()
+            return {}
 
     def save_previous_values(self) -> None:
-        with open(self.previous_values_file, 'w') as file:
-            json.dump(list(self.previous_flat_links), file)
+        with open(self.links_file_path, 'w') as file:
+            json.dump({
+                "links": list(self.previous_links),
+                "default_url": self.url if self.save else None
+            }, file)
 
     def open_links(self, current_flat_links: set) -> None:
-        new_links = current_flat_links - self.previous_flat_links
+        new_links = current_flat_links - self.previous_links
         if len(new_links) > 0:
             self.make_sound()
             message = "Czy chcesz otworzyć nowy link?" if len(
@@ -63,15 +73,15 @@ class Bot:
         current_flat_links = set(page.evaluate(
             self.flat_links_script
         ))
-        if current_flat_links != self.previous_flat_links:
+        if current_flat_links != self.previous_links:
             self.open_links(current_flat_links)
-        self.previous_flat_links = current_flat_links
+        self.previous_links = current_flat_links
         self.save_previous_values()
         browser.close()
 
 
 def main():
-    bot = Bot(URL)
+    bot = Bot()
 
     while True:
         with sync_playwright() as playwright:
