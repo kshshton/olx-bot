@@ -4,14 +4,11 @@ import webbrowser
 import winsound
 from tkinter.messagebox import askyesno
 
-from dotenv import load_dotenv
 from playwright.sync_api import Playwright, sync_playwright
 
 from gui import url_input
 
 WAIT_TIME: int = 1800
-
-load_dotenv()
 
 
 class Bot:
