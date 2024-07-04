@@ -1,4 +1,4 @@
 - You can run bot by executing `main.py`,`run.bat` or your own `.exe` created by [pyinstaller](https://www.pyinstaller.org/en/stable/usage.html)
   - If you want to use `run.bat`, you'll need to define `%VENV_PATH%` and `%BOT_FOLDER_PATH%` in `.env` file or as environment variables in your system
 - Paste destination URL in GUI
-- Script will generates `links.json` file in script's folder as a database
+- Script will generate named `.json` file as a minimalistic database
