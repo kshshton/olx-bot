@@ -8,7 +8,7 @@ WAIT_TIME: int = 1800
 
 
 def main():
-    bot = Bot(filename="links")
+    bot = Bot(filename="mieszkania")
 
     while True:
         with sync_playwright() as playwright:
